@@ -64,7 +64,7 @@ async function main() {
   console.log('');
 
   const currentDir = process.cwd();
-  const files = [
+  let files = [
     'Dockerfile',
     'docker-compose.yml',
     'ecosystem.config.js',
@@ -88,7 +88,7 @@ async function main() {
 
   const spinner = ora('Processing...').start();
 
-  const files = [
+  files = [
     { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
     {
       name: 'docker-compose.yml',
