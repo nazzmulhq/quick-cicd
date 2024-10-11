@@ -71,7 +71,9 @@ async function main() {
     'deploy.sh',
     'bitbucket-pipelines.yml',
   ];
-  const existFiles = files.filter(file => fs.existsSync(path + file));
+  const existFiles = files.filter(file =>
+    fs.existsSync(path.join(currentDir, file))
+  );
   if (existFiles.length > 0) {
     console.log(
       chalk.red('Error:'),
