@@ -20,7 +20,7 @@ const questions = [
     type: 'list',
     name: 'projectType',
     message: 'Select project type:',
-    choices: ['frontend (react)', 'backend (Coming soon)'],
+    choices: ['frontend (react)', 'backend (express or nest.js)'],
     default: 'frontend (react)',
   },
   // {
@@ -82,11 +82,7 @@ async function main() {
     process.exit(1);
   }
   const answers = await inquirer.prompt(questions);
-
-  if (answers.projectType === 'backend (Coming soon)') {
-    console.log(chalk.red('Backend project is not supported yet.'));
-    process.exit(1);
-  }
+  const isBackend = answers.projectType === 'backend (express or nest.js)';
 
   const spinner = ora('Processing...').start();
 
