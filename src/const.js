@@ -165,7 +165,7 @@ services:
     volumes:
       - ./:/app
     networks:
-      - documentation
+      - ${projectName}
     ports:
       - '3010:3010'
     depends_on:
@@ -186,7 +186,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - documentation
+      - ${projectName}
     ports:
       - '3306:3306'
 
@@ -201,7 +201,7 @@ services:
       PMA_VERBOSE: 'Docker MySQL,Local MySQL'
       MYSQL_ROOT_PASSWORD: 123456
     networks:
-      - documentation
+      - ${projectName}
 
   redis:
     image: redis:alpine
@@ -209,13 +209,38 @@ services:
     ports:
       - '6379:6379'
     networks:
-      - documentation
+      - ${projectName}
 
 networks:
-  documentation:
+  ${projectName}:
     driver: bridge
 volumes:
   mysql-data:
+`;
+};
+
+export const getEcosystemConfigJsFileForBackendNode = projectName => {
+  return `
+module.exports = {
+  apps: [
+    {
+      name: "${projectName}-prod",
+      script: "npm run",
+      args: "start",
+      interpreter: "/bin/bash",
+      env: {
+        NODE_ENV: "production",
+      },
+    },
+    {
+      name: "${projectName}-dev",
+      script: "npm run",
+      args: "start:dev",
+      interpreter: "/bin/bash",
+      watch: true,
+    },
+  ],
+};
 `;
 };
 
@@ -228,4 +253,60 @@ docker exec ${projectName} npm ci
 docker exec ${projectName} npm run build
 docker exec ${projectName} pm2 start --only "${projectName}-prod"
 `;
+};
+
+export const getBitbucketPipelinesFileForBackendNode = (
+  projectName,
+  imageName,
+  caches
+) => {
+  return `
+image: ${imageName}
+pipelines:
+  default:
+    - step:
+        name: Install, Build, and Deploy
+        script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  branches:
+    master:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+    main:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+    dev:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  custom:
+    merge-deploy:
+      - step:
+          name: Manual Deployment After Merge
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  `;
 };

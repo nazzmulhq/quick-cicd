@@ -7,10 +7,15 @@ import ora from 'ora';
 import path from 'path';
 import {
   getBitbucketPipelinesFile,
+  getBitbucketPipelinesFileForBackendNode,
   getDeployShFile,
+  getDeployShFileForBackendNode,
   getDockerComposeFile,
+  getDockerComposeFileForBackendNode,
   getDockerFile,
+  getDockerFileForBackendNode,
   getEcosystemConfigJsFile,
+  getEcosystemConfigJsFileForBackendNode,
 } from './const.js';
 
 // set default values
@@ -28,7 +33,7 @@ const questions = [
   //   name: 'projectLanguage',
   //   message: 'Select project language:',
   //   choices: ['node', 'php', 'python'],
-  //   when: answers => answers.projectType === 'backend (Coming soon)',
+  //   when: answers => answers.projectType === 'backend (express or nest.js)',
   // },
   {
     type: 'input',
@@ -83,29 +88,57 @@ async function main() {
   }
   const answers = await inquirer.prompt(questions);
   const isBackend = answers.projectType === 'backend (express or nest.js)';
-
   const spinner = ora('Processing...').start();
 
-  files = [
-    { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
-    {
-      name: 'docker-compose.yml',
-      content: getDockerComposeFile(answers.projectName),
-    },
-    {
-      name: 'ecosystem.config.js',
-      content: getEcosystemConfigJsFile(answers.projectName),
-    },
-    { name: 'deploy.sh', content: getDeployShFile(answers.projectName) },
-    {
-      name: 'bitbucket-pipelines.yml',
-      content: getBitbucketPipelinesFile(
-        answers.projectName,
-        answers.dependency,
-        answers.caches
-      ),
-    },
-  ];
+  if (isBackend) {
+    files = [
+      {
+        name: 'Dockerfile',
+        content: getDockerFileForBackendNode(answers.dependency),
+      },
+      {
+        name: 'docker-compose.yml',
+        content: getDockerComposeFileForBackendNode(answers.projectName),
+      },
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFileForBackendNode(answers.projectName),
+      },
+      {
+        name: 'deploy.sh',
+        content: getDeployShFileForBackendNode(answers.projectName),
+      },
+      {
+        name: 'bitbucket-pipelines.yml',
+        content: getBitbucketPipelinesFileForBackendNode(
+          answers.projectName,
+          answers.dependency,
+          answers.caches
+        ),
+      },
+    ];
+  } else {
+    files = [
+      { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
+      {
+        name: 'docker-compose.yml',
+        content: getDockerComposeFile(answers.projectName),
+      },
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFile(answers.projectName),
+      },
+      { name: 'deploy.sh', content: getDeployShFile(answers.projectName) },
+      {
+        name: 'bitbucket-pipelines.yml',
+        content: getBitbucketPipelinesFile(
+          answers.projectName,
+          answers.dependency,
+          answers.caches
+        ),
+      },
+    ];
+  }
 
   try {
     console.log('');
