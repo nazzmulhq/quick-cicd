@@ -25,16 +25,21 @@ const questions = [
     type: 'list',
     name: 'projectType',
     message: 'Select project type:',
-    choices: ['frontend (react)', 'backend (express or nest.js)'],
+    choices: ['frontend (react)', 'backend'],
     default: 'frontend (react)',
   },
-  // {
-  //   type: 'list',
-  //   name: 'projectLanguage',
-  //   message: 'Select project language:',
-  //   choices: ['node', 'php', 'python'],
-  //   when: answers => answers.projectType === 'backend (express or nest.js)',
-  // },
+  {
+    type: 'list',
+    name: 'projectLanguage',
+    message: 'Select project language:',
+    choices: [
+      'node-(express or nest.js)',
+      'php-(coming soon)',
+      'python-(coming soon)',
+    ],
+    when: answers => answers.projectType === 'backend',
+    default: 'node-(express or nest.js)',
+  },
   {
     type: 'input',
     name: 'projectName',
@@ -69,14 +74,14 @@ async function main() {
   console.log('');
 
   const currentDir = process.cwd();
-  let files = [
+  const isExistFiles = [
     'Dockerfile',
     'docker-compose.yml',
     'ecosystem.config.js',
     'deploy.sh',
     'bitbucket-pipelines.yml',
   ];
-  const existFiles = files.filter(file =>
+  const existFiles = isExistFiles.filter(file =>
     fs.existsSync(path.join(currentDir, file))
   );
   if (existFiles.length > 0) {
@@ -87,11 +92,46 @@ async function main() {
     process.exit(1);
   }
   const answers = await inquirer.prompt(questions);
-  const isBackend = answers.projectType === 'backend (express or nest.js)';
+  const keyName =
+    answers.projectType === 'backend' ? 'projectLanguage' : 'projectType';
+  if (
+    answers.projectType === 'backend' &&
+    answers.projectLanguage === 'php-(coming soon)'
+  ) {
+    console.log(chalk.red('Error:'), 'PHP is not supported yet.');
+    process.exit(1);
+  }
+  if (
+    answers.projectType === 'backend' &&
+    answers.projectLanguage === 'python-(coming soon)'
+  ) {
+    console.log(chalk.red('Error:'), 'Python is not supported yet.');
+    process.exit(1);
+  }
   const spinner = ora('Processing...').start();
 
-  if (isBackend) {
-    files = [
+  const files = {
+    'frontend (react)': [
+      { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
+      {
+        name: 'docker-compose.yml',
+        content: getDockerComposeFile(answers.projectName),
+      },
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFile(answers.projectName),
+      },
+      { name: 'deploy.sh', content: getDeployShFile(answers.projectName) },
+      {
+        name: 'bitbucket-pipelines.yml',
+        content: getBitbucketPipelinesFile(
+          answers.projectName,
+          answers.dependency,
+          answers.caches
+        ),
+      },
+    ],
+    'node-(express or nest.js)': [
       {
         name: 'Dockerfile',
         content: getDockerFileForBackendNode(answers.dependency),
@@ -116,33 +156,16 @@ async function main() {
           answers.caches
         ),
       },
-    ];
-  } else {
-    files = [
-      { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
-      {
-        name: 'docker-compose.yml',
-        content: getDockerComposeFile(answers.projectName),
-      },
-      {
-        name: 'ecosystem.config.js',
-        content: getEcosystemConfigJsFile(answers.projectName),
-      },
-      { name: 'deploy.sh', content: getDeployShFile(answers.projectName) },
-      {
-        name: 'bitbucket-pipelines.yml',
-        content: getBitbucketPipelinesFile(
-          answers.projectName,
-          answers.dependency,
-          answers.caches
-        ),
-      },
-    ];
-  }
+    ],
+    php: [],
+    python: [],
+  };
 
   try {
     console.log('');
-    for (const file of files) {
+    const correctFiles = files[answers[keyName]];
+
+    for (const file of correctFiles) {
       const filePath = path.join(currentDir, file.name);
       await fs.outputFile(filePath, file.content);
       console.log(chalk.green(`✔ Created ${file.name}`));
