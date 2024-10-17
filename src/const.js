@@ -157,38 +157,38 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: ${projectName}
+    image: \${COMPOSE_PROJECT_NAME:?err}
     tty: true
     restart: unless-stopped
-    container_name: ${projectName}
+    container_name: \${COMPOSE_PROJECT_NAME:?err}
     working_dir: /app/
     volumes:
       - ./:/app
     networks:
-      - ${projectName}
+      - documentation
     ports:
-      - '3010:3010'
+      - '\${HOST_PORT}:3010'
     depends_on:
       - db
       - redis
 
   db:
     image: mysql:8.0
-    container_name: ${projectName}_db
+    container_name: \${COMPOSE_PROJECT_NAME:?err}_db
     restart: unless-stopped
     command: --max_allowed_packet=32505856
     environment:
-      MYSQL_DATABASE: ${projectName}
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: \${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
       TZ: Asia/Dhaka
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - ${projectName}
+      - documentation
     ports:
-      - '3306:3306'
+      - '\${DOCKER_DB_HOST_PORT:?err}:3306'
 
   phpmyadmin:
     depends_on:
@@ -196,23 +196,23 @@ services:
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - '80:80'
+      - '\${PHP_MY_ADMIN_PORT}:80'
     environment:
       PMA_VERBOSE: 'Docker MySQL,Local MySQL'
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
     networks:
-      - ${projectName}
+      - documentation
 
   redis:
     image: redis:alpine
-    container_name: ${projectName}_redis
+    container_name: \${COMPOSE_PROJECT_NAME:?err}_redis
     ports:
-      - '6379:6379'
+      - '\${DOCKER_REDIS_PORT:?err}:6379'
     networks:
-      - ${projectName}
+      - documentation
 
 networks:
-  ${projectName}:
+  documentation:
     driver: bridge
 volumes:
   mysql-data:
@@ -308,5 +308,35 @@ pipelines:
             - chmod +x ./deploy.sh
             - bash ./deploy.sh
 
+  `;
+};
+
+export const getDotEnvFileForBackendNode = projectName => {
+  return `
+PORT=3010
+# DB
+DB_HOST=db
+DB_PORT=3306
+DB_USER=root
+DB_PASS=
+DB_NAME=${projectName}
+
+# Swagger
+SWAGGER_ENDPOINT=api-docs
+SWAGGER_USER=
+SWAGGER_PASS=
+
+# JWT Secret
+JWT_EXPIRES_IN=1d
+JWT_SECRET=YzJSQlFVRldRMFZXUmlNakkwQkFKRUJYWkhOaFpITkFSbVJ6Wmc%3D
+
+# Docker
+COMPOSE_PROJECT_NAME=${projectName}
+HOST_PORT=3010
+DB_DATABASE=${projectName}
+MYSQL_ROOT_PASSWORD=123456
+DOCKER_DB_HOST_PORT=3307
+DOCKER_REDIS_PORT=3308
+PHP_MY_ADMIN_PORT=3309
   `;
 };

@@ -14,6 +14,7 @@ import {
   getDockerComposeFileForBackendNode,
   getDockerFile,
   getDockerFileForBackendNode,
+  getDotEnvFileForBackendNode,
   getEcosystemConfigJsFile,
   getEcosystemConfigJsFileForBackendNode,
 } from './const.js';
@@ -155,6 +156,10 @@ async function main() {
           answers.dependency,
           answers.caches
         ),
+      },
+      {
+        name: 'env.example',
+        content: getDotEnvFileForBackendNode(answers.projectName),
       },
     ],
     php: [],
