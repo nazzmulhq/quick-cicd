@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
+import cp from 'child_process';
 import fs from 'fs-extra';
 import inquirer from 'inquirer';
 import ora from 'ora';
@@ -108,12 +109,6 @@ async function main() {
     console.log(chalk.red('Error:'), 'Python is not supported yet.');
     process.exit(1);
   }
-
-  const isCurrentDirPackageJson = await checkPackageJson();
-
-  const nodeVersion = await checkNodeVersion();
-
-  console.log(isCurrentDirPackageJson, nodeVersion);
 
   let projectName = '';
   let dependency = '';
