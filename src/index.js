@@ -19,45 +19,48 @@ import {
   getEcosystemConfigJsFileForBackendNode,
 } from './const.js';
 
-// set default values
+async function shellCommand(command) {
+  try {
+    const isError = shell.exec(command).code !== 0;
+    if (isError) {
+      shell.echo(`Error: ${command} failed`);
+      shell.exit(1);
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+const checkPackageJson = async args => {
+  if (!fs.existsSync('./package.json')) {
+    console.log(
+      chalk.red('Error:'),
+      'package.json file not found in the current directory.'
+    );
+    process.exit(1);
+  }
+  const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+  return pkg.name;
+};
+
+const checkNodeVersion = async args => {
+  const nodeVersion = cp.execSync('node -v').toString();
+  return nodeVersion;
+};
 
 const questions = [
   {
     type: 'list',
     name: 'projectType',
     message: 'Select project type:',
-    choices: ['frontend (react)', 'backend'],
-    default: 'frontend (react)',
-  },
-  {
-    type: 'list',
-    name: 'projectLanguage',
-    message: 'Select project language:',
     choices: [
+      'frontend-(react or next.js)',
       'node-(express or nest.js)',
       'php-(coming soon)',
       'python-(coming soon)',
     ],
-    when: answers => answers.projectType === 'backend',
-    default: 'node-(express or nest.js)',
-  },
-  {
-    type: 'input',
-    name: 'projectName',
-    message: 'Enter project name:',
-    default: 'my-app',
-  },
-  {
-    type: 'input',
-    name: 'dependency',
-    message: 'Enter dependency package:',
-    default: 'node:20.16.0',
-  },
-  {
-    type: 'input',
-    name: 'caches',
-    message: 'Enter project caches:',
-    default: 'node',
+    default: 'frontend (react or next.js)',
   },
 ];
 
@@ -82,9 +85,11 @@ async function main() {
     'deploy.sh',
     'bitbucket-pipelines.yml',
   ];
+
   const existFiles = isExistFiles.filter(file =>
     fs.existsSync(path.join(currentDir, file))
   );
+
   if (existFiles.length > 0) {
     console.log(
       chalk.red('Error:'),
@@ -92,27 +97,32 @@ async function main() {
     );
     process.exit(1);
   }
+
   const answers = await inquirer.prompt(questions);
-  const keyName =
-    answers.projectType === 'backend' ? 'projectLanguage' : 'projectType';
-  if (
-    answers.projectType === 'backend' &&
-    answers.projectLanguage === 'php-(coming soon)'
-  ) {
+
+  if (answers.projectType === 'php-(coming soon)') {
     console.log(chalk.red('Error:'), 'PHP is not supported yet.');
     process.exit(1);
   }
-  if (
-    answers.projectType === 'backend' &&
-    answers.projectLanguage === 'python-(coming soon)'
-  ) {
+  if (answers.projectType === 'python-(coming soon)') {
     console.log(chalk.red('Error:'), 'Python is not supported yet.');
     process.exit(1);
   }
+
+  const isCurrentDirPackageJson = await checkPackageJson();
+
+  const nodeVersion = await checkNodeVersion();
+
+  console.log(isCurrentDirPackageJson, nodeVersion);
+
+  let projectName = '';
+  let dependency = '';
+  let caches = '';
+
   const spinner = ora('Processing...').start();
 
   const files = {
-    'frontend (react)': [
+    'frontend-(react or next.js)': [
       { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
       {
         name: 'docker-compose.yml',
@@ -168,7 +178,7 @@ async function main() {
 
   try {
     console.log('');
-    const correctFiles = files[answers[keyName]];
+    const correctFiles = files[answers?.projectType];
 
     for (const file of correctFiles) {
       const filePath = path.join(currentDir, file.name);

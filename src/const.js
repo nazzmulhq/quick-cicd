@@ -26,7 +26,7 @@ export const getDockerComposeFile = projectName => {
             volumes:
                 - ./:/app
             ports:
-                - "3000:3000"
+                - '\${PORT}:3000'
             networks:
                 - ${projectName}
     networks:
@@ -119,6 +119,12 @@ pipelines:
             - chmod +x ./deploy.sh
             - bash ./deploy.sh
 
+  `;
+};
+
+export const getDotEnvFile = projectName => {
+  return `
+PORT=3000
   `;
 };
 
