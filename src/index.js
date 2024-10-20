@@ -15,6 +15,7 @@ import {
   getDockerComposeFileForBackendNode,
   getDockerFile,
   getDockerFileForBackendNode,
+  getDotEnvFile,
   getDotEnvFileForBackendNode,
   getEcosystemConfigJsFile,
   getEcosystemConfigJsFileForBackendNode,
@@ -33,7 +34,7 @@ async function shellCommand(command) {
   }
 }
 
-const checkPackageJson = async args => {
+const checkPackageJson = async () => {
   if (!fs.existsSync('./package.json')) {
     console.log(
       chalk.red('Error:'),
@@ -45,9 +46,17 @@ const checkPackageJson = async args => {
   return pkg.name;
 };
 
-const checkNodeVersion = async args => {
+const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
-  return nodeVersion;
+  return String(nodeVersion)
+    .trim()
+    .slice(1);
+};
+const checkPHPVersion = async => {
+  const phpVersion = cp
+    .execSync(`php -r "echo PHP_VERSION . PHP_EOL;"`)
+    .toString();
+  return phpVersion;
 };
 
 const questions = [
@@ -76,7 +85,6 @@ async function main() {
   My Portfolio: https://nazmulhaque.netlify.app/
 `)
   );
-  console.log('');
 
   const currentDir = process.cwd();
   const isExistFiles = [
@@ -114,27 +122,52 @@ async function main() {
   let dependency = '';
   let caches = '';
 
+  if (
+    answers.projectType === 'frontend-(react or next.js)' ||
+    answers.projectType === 'node-(express or nest.js)'
+  ) {
+    projectName = await checkPackageJson();
+    const nodeVersion = await checkNodeVersion('node -v');
+    dependency = `node:${nodeVersion}`;
+    caches = 'npm';
+  }
+
+  if (answers.projectType === 'php-(laravel)') {
+    projectName = await checkPackageJson();
+    const phpVersion = await checkPHPVersion();
+    dependency = `php:${phpVersion}`;
+    caches = 'composer';
+  }
+
+  if (projectName === '' || dependency === '' || caches === '') {
+    console.log(
+      chalk.red('Error:'),
+      'Project name, dependency, or caches not found.'
+    );
+    process.exit(1);
+  }
+
   const spinner = ora('Processing...').start();
 
   const files = {
     'frontend-(react or next.js)': [
-      { name: 'Dockerfile', content: getDockerFile(answers.dependency) },
+      { name: 'Dockerfile', content: getDockerFile(dependency) },
       {
         name: 'docker-compose.yml',
-        content: getDockerComposeFile(answers.projectName),
+        content: getDockerComposeFile(projectName),
       },
       {
         name: 'ecosystem.config.js',
-        content: getEcosystemConfigJsFile(answers.projectName),
+        content: getEcosystemConfigJsFile(projectName),
       },
-      { name: 'deploy.sh', content: getDeployShFile(answers.projectName) },
+      { name: 'deploy.sh', content: getDeployShFile(projectName) },
       {
         name: 'bitbucket-pipelines.yml',
-        content: getBitbucketPipelinesFile(
-          answers.projectName,
-          answers.dependency,
-          answers.caches
-        ),
+        content: getBitbucketPipelinesFile(projectName, dependency, caches),
+      },
+      {
+        name: 'env.example',
+        content: getDotEnvFile(answers.projectName),
       },
     ],
     'node-(express or nest.js)': [
