@@ -36,6 +36,7 @@ Step 6: Select the language and framework of your project.
 Step 7: On your server generate an SSH key Pair, run the following command:
 
 `ssh-keygen -t rsa -b 4096 -C "your_email@example.com`
+
 step 8: Copy the public key (~/.ssh/id_rsa.pub) and add it to bitbucket under the SSH keys section in the settings.
 
 ```
