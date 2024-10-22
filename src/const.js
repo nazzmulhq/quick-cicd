@@ -319,7 +319,7 @@ pipelines:
 
 export const getDotEnvFileForBackendNode = projectName => {
   return `
-PORT=3010
+PORT=3000
 # DB
 DB_HOST=db
 DB_PORT=3306
