@@ -48,11 +48,9 @@ const checkPackageJson = async () => {
 
 const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
-  return String(nodeVersion)
-    .trim()
-    .slice(1);
+  return String(nodeVersion).trim().slice(1);
 };
-const checkPHPVersion = async => {
+const checkPHPVersion = (async) => {
   const phpVersion = cp
     .execSync(`php -r "echo PHP_VERSION . PHP_EOL;"`)
     .toString();
@@ -95,7 +93,7 @@ async function main() {
     'bitbucket-pipelines.yml',
   ];
 
-  const existFiles = isExistFiles.filter(file =>
+  const existFiles = isExistFiles.filter((file) =>
     fs.existsSync(path.join(currentDir, file))
   );
 
@@ -149,6 +147,12 @@ async function main() {
 
   const spinner = ora('Processing...').start();
 
+  console.log({
+    projectName,
+    dependency,
+    caches,
+  });
+
   const files = {
     'frontend-(react or next.js)': [
       { name: 'Dockerfile', content: getDockerFile(dependency) },
@@ -173,31 +177,31 @@ async function main() {
     'node-(express or nest.js)': [
       {
         name: 'Dockerfile',
-        content: getDockerFileForBackendNode(answers.dependency),
+        content: getDockerFileForBackendNode(dependency),
       },
       {
         name: 'docker-compose.yml',
-        content: getDockerComposeFileForBackendNode(answers.projectName),
+        content: getDockerComposeFileForBackendNode(projectName),
       },
       {
         name: 'ecosystem.config.js',
-        content: getEcosystemConfigJsFileForBackendNode(answers.projectName),
+        content: getEcosystemConfigJsFileForBackendNode(projectName),
       },
       {
         name: 'deploy.sh',
-        content: getDeployShFileForBackendNode(answers.projectName),
+        content: getDeployShFileForBackendNode(projectName),
       },
       {
         name: 'bitbucket-pipelines.yml',
         content: getBitbucketPipelinesFileForBackendNode(
-          answers.projectName,
-          answers.dependency,
-          answers.caches
+          projectName,
+          dependency,
+          caches
         ),
       },
       {
         name: 'env.example',
-        content: getDotEnvFileForBackendNode(answers.projectName),
+        content: getDotEnvFileForBackendNode(projectName),
       },
     ],
     php: [],
@@ -223,7 +227,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(chalk.red('Error:'), error);
   process.exit(1);
 });
