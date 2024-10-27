@@ -255,8 +255,6 @@ async function main() {
     console.log('');
     const correctFiles = files[answers?.projectType];
 
-    console.log('correctFiles', correctFiles);
-
     for (const file of correctFiles) {
       const filePath = path.join(currentDir, file.name);
       await fs.outputFile(filePath, file.content);
