@@ -347,4 +347,193 @@ PHP_MY_ADMIN_PORT=3309
   `;
 };
 
-// for php php larvae backend docker docker compose ald sh code pull to deploy
+// for php
+
+export const getDockerFileForLaravel = (phpVersion = 'php:8.1-fpm') => {
+  return `
+# Use PHP base image
+FROM ${phpVersion}
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    unzip \
+    git \
+    curl \
+    supervisor \
+    libzip-dev
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql zip exif pcntl
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install gd
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy application code
+COPY . /app
+
+# Set permissions for Laravel
+RUN chown -R www-data:www-data /app && chmod -R 755 /app/storage
+
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
+
+# Start PHP-FPM
+CMD ["php-fpm"]
+  `;
+};
+
+export const getDockerComposeFileForLaravel = (projectName) => {
+  return `
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: ${projectName}
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "\${APP_PORT}:9000"
+    networks:
+      - ${projectName}_network
+
+  db:
+    image: mysql:8.0
+    container_name: ${projectName}_db
+    environment:
+      MYSQL_DATABASE: \${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ${projectName}_network
+    ports:
+      - "\${DB_PORT}:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "\${PMA_PORT}:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+    networks:
+      - ${projectName}_network
+
+networks:
+  ${projectName}_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  `;
+};
+
+export const getDeployShFileForLaravel = (projectName) => {
+  return `
+#!/bin/bash
+echo "Pulling latest changes..."
+git pull origin main
+
+echo "Building Docker containers..."
+docker-compose down
+docker-compose up -d --build
+
+echo "Running database migrations..."
+docker-compose exec ${projectName} php artisan migrate --force
+
+echo "Clearing caches and optimizing..."
+docker-compose exec ${projectName} php artisan config:cache
+docker-compose exec ${projectName} php artisan route:cache
+docker-compose exec ${projectName} php artisan view:cache
+
+echo "Deployment complete!"
+  `;
+};
+
+export const getBitbucketPipelinesFileForLaravel = (
+  projectName,
+  imageName,
+  caches
+) => {
+  return `
+image: ${imageName}
+
+pipelines:
+  default:
+    - step:
+        name: Install, Build, and Deploy
+        caches:
+          - ${caches}
+        script:
+          - chmod +x ./deploy.sh
+          - ./deploy.sh
+
+  branches:
+    main:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - ./deploy.sh
+
+    dev:
+      - step:
+          name: Development Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - ./deploy.sh
+  `;
+};
+
+export const getDotEnvFileForLaravel = (projectName) => {
+  return `
+APP_NAME=${projectName}
+APP_ENV=local
+APP_KEY=base64:YOUR_APP_KEY
+APP_DEBUG=true
+APP_URL=http://localhost
+
+# Docker
+APP_PORT=8000
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=${projectName}
+DB_USERNAME=root
+DB_PASSWORD=123456
+
+# PhpMyAdmin
+PMA_PORT=8080
+
+# Cache and session
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+  `;
+};
