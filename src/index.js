@@ -51,6 +51,18 @@ const checkPackageJson = async () => {
   return pkg.name;
 };
 
+const checkPHPComposerJson = async () => {
+  if (!fs.existsSync('./composer.json')) {
+    console.log(
+      chalk.red('Error:'),
+      'composer.json file not found in the current directory.'
+    );
+    process.exit(1);
+  }
+  const composer = JSON.parse(fs.readFileSync('./composer.json', 'utf-8'));
+  return composer.name;
+};
+
 const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
   return String(nodeVersion).trim().slice(1);
@@ -136,7 +148,7 @@ async function main() {
   }
 
   if (answers.projectType === 'php-(laravel)') {
-    projectName = await checkPackageJson();
+    projectName = await checkPHPComposerJson();
     const phpVersion = await checkPHPVersion();
     dependency = `php:${phpVersion}`;
     caches = 'composer';
