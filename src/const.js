@@ -1,6 +1,6 @@
-// for front-end
+// for front-end react
 
-export const getDockerFile = nodeVersion => {
+export const getDockerFile = (nodeVersion) => {
   return `
 FROM ${nodeVersion}
 
@@ -10,7 +10,7 @@ EXPOSE 3000
 `;
 };
 
-export const getDockerComposeFile = projectName => {
+export const getDockerComposeFile = (projectName) => {
   return `
     version: "3.9"
     services:
@@ -34,7 +34,7 @@ export const getDockerComposeFile = projectName => {
             driver: bridge
     `;
 };
-export const getEcosystemConfigJsFile = projectName => {
+export const getEcosystemConfigJsFile = (projectName) => {
   return `
     module.exports = {
         apps: [
@@ -59,7 +59,7 @@ export const getEcosystemConfigJsFile = projectName => {
     `;
 };
 
-export const getDeployShFile = projectName => {
+export const getDeployShFile = (projectName) => {
   return `
     git pull
     docker-compose down
@@ -122,15 +122,15 @@ pipelines:
   `;
 };
 
-export const getDotEnvFile = projectName => {
+export const getDotEnvFile = (projectName) => {
   return `
 PORT=3000
   `;
 };
 
-// for back-end
+// for back-end nodejs
 
-export const getDockerFileForBackendNode = nodeVersion => {
+export const getDockerFileForBackendNode = (nodeVersion) => {
   return `
 # Use the official Node.js image as the base image
 FROM ${nodeVersion}
@@ -155,7 +155,7 @@ CMD ["npm", "run", "start:dev"]
 `;
 };
 
-export const getDockerComposeFileForBackendNode = projectName => {
+export const getDockerComposeFileForBackendNode = (projectName) => {
   return `
 version: '3.8'
 services:
@@ -171,7 +171,7 @@ services:
     volumes:
       - ./:/app
     networks:
-      - documentation
+      - ${projectName}_network
     ports:
       - '\${HOST_PORT}:3010'
     depends_on:
@@ -192,7 +192,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - documentation
+      - ${projectName}_network
     ports:
       - '\${DOCKER_DB_HOST_PORT:?err}:3306'
 
@@ -207,7 +207,7 @@ services:
       PMA_VERBOSE: 'Docker MySQL,Local MySQL'
       MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
     networks:
-      - documentation
+      - ${projectName}_network
 
   redis:
     image: redis:alpine
@@ -215,17 +215,17 @@ services:
     ports:
       - '\${DOCKER_REDIS_PORT:?err}:6379'
     networks:
-      - documentation
+      - ${projectName}_network
 
 networks:
-  documentation:
+  ${projectName}_network:
     driver: bridge
 volumes:
   mysql-data:
 `;
 };
 
-export const getEcosystemConfigJsFileForBackendNode = projectName => {
+export const getEcosystemConfigJsFileForBackendNode = (projectName) => {
   return `
 module.exports = {
   apps: [
@@ -250,7 +250,7 @@ module.exports = {
 `;
 };
 
-export const getDeployShFileForBackendNode = projectName => {
+export const getDeployShFileForBackendNode = (projectName) => {
   return `
 git pull
 docker-compose down
@@ -317,7 +317,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFileForBackendNode = projectName => {
+export const getDotEnvFileForBackendNode = (projectName) => {
   return `
 PORT=3000
 # DB
@@ -346,3 +346,5 @@ DOCKER_REDIS_PORT=3308
 PHP_MY_ADMIN_PORT=3309
   `;
 };
+
+// for php php larvae backend docker docker compose ald sh code pull to deploy
