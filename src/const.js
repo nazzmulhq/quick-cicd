@@ -358,18 +358,9 @@ FROM ${phpVersion}
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    locales \
-    zip \
-    unzip \
-    git \
-    curl \
-    supervisor \
-    libzip-dev
+RUN apt-get update && apt-get install -y && sudo apt install -y php php-common php-cli php-gd php-mysqlnd php-curl php-intl php-mbstring php-bcmath php-xml php-zip curl unzip git
+
+RUN curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/bin --filename=composer
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

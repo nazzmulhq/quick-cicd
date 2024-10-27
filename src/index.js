@@ -150,7 +150,7 @@ async function main() {
   if (answers.projectType === 'php-(laravel)') {
     projectName = await checkPHPComposerJson();
     const phpVersion = await checkPHPVersion();
-    dependency = `php:${phpVersion}`;
+    dependency = `php:${phpVersion.trim()}`;
     caches = 'composer';
   }
 
@@ -162,7 +162,7 @@ async function main() {
     process.exit(1);
   }
 
-  const spinner = ora('Processing...').start();
+  const spinner = ora('Processing...\n').start();
 
   console.log({
     projectName,
@@ -221,7 +221,7 @@ async function main() {
         content: getDotEnvFileForBackendNode(projectName),
       },
     ],
-    php: [
+    'php-(laravel)': [
       {
         name: 'Dockerfile',
         content: getDockerFileForLaravel(dependency),
@@ -244,7 +244,7 @@ async function main() {
         ),
       },
       {
-        name: 'env.example',
+        name: 'example.env',
         content: getDotEnvFileForLaravel(projectName),
       },
     ],
@@ -254,6 +254,8 @@ async function main() {
   try {
     console.log('');
     const correctFiles = files[answers?.projectType];
+
+    console.log('correctFiles', correctFiles);
 
     for (const file of correctFiles) {
       const filePath = path.join(currentDir, file.name);
