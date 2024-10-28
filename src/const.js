@@ -349,40 +349,51 @@ PHP_MY_ADMIN_PORT=3309
 
 // for php
 
-export const getDockerFileForLaravel = (phpVersion = 'php:8.1-fpm') => {
+export const getDockerFileForBackendPHPLaravel = (phpVersion) => {
   return `
-# Use PHP base image
-FROM ${phpVersion}
+# Use the official PHP image as the base image
+FROM php:${phpVersion}-fpm
 
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y && sudo apt install -y php php-common php-cli php-gd php-mysqlnd php-curl php-intl php-mbstring php-bcmath php-xml php-zip curl unzip git
-
-RUN curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/bin --filename=composer
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    jpegoptim optipng pngquant gifsicle \
+    vim \
+    unzip \
+    git \
+    curl \
+    libonig-dev \
+    libzip-dev \
+    supervisor
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip exif pcntl
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy application code
+# Copy existing application directory contents
 COPY . /app
 
-# Set permissions for Laravel
-RUN chown -R www-data:www-data /app && chmod -R 755 /app/storage
+# Copy existing application directory permissions
+COPY --chown=www-data:www-data . /app
 
-# Expose port 9000 for PHP-FPM
+# Change current user to www
+USER www-data
+
+# Expose port 9000 and start php-fpm server
 EXPOSE 9000
-
-# Start PHP-FPM
 CMD ["php-fpm"]
   `;
 };
@@ -396,13 +407,25 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: ${projectName}
+    container_name: ${projectName}_app
     restart: unless-stopped
     working_dir: /app
     volumes:
       - ./:/app
     ports:
       - "\${APP_PORT}:9000"
+    environment:
+      APP_NAME: \${APP_NAME}
+      APP_ENV: \${APP_ENV}
+      APP_KEY: \${APP_KEY}
+      APP_DEBUG: \${APP_DEBUG}
+      APP_URL: \${APP_URL}
+      DB_CONNECTION: \${DB_CONNECTION}
+      DB_HOST: db
+      DB_PORT: \${DB_PORT}
+      DB_DATABASE: \${DB_DATABASE}
+      DB_USERNAME: \${DB_USERNAME}
+      DB_PASSWORD: \${DB_PASSWORD}
     networks:
       - ${projectName}_network
 
@@ -442,20 +465,36 @@ volumes:
 export const getDeployShFileForLaravel = (projectName) => {
   return `
 #!/bin/bash
-echo "Pulling latest changes..."
+
+# Pull the latest code from the repository
+echo "Pulling latest code from repository..."
 git pull origin main
 
-echo "Building Docker containers..."
+# Stop and remove the current containers
+echo "Stopping and removing current containers..."
 docker-compose down
+
+# Build and start the containers in detached mode
+echo "Building and starting containers..."
 docker-compose up -d --build
 
-echo "Running database migrations..."
-docker-compose exec ${projectName} php artisan migrate --force
+# Install dependencies in the app container
+echo "Installing dependencies..."
+docker exec -it ${projectName}_app composer install --optimize-autoloader --no-dev
 
-echo "Clearing caches and optimizing..."
-docker-compose exec ${projectName} php artisan config:cache
-docker-compose exec ${projectName} php artisan route:cache
-docker-compose exec ${projectName} php artisan view:cache
+# Run migrations
+echo "Running database migrations..."
+docker exec -it ${projectName}_app php artisan migrate --force
+
+# Clear and cache configurations, routes, views
+echo "Clearing and caching configurations..."
+docker exec -it ${projectName}_app php artisan config:cache
+docker exec -it ${projectName}_app php artisan route:cache
+docker exec -it ${projectName}_app php artisan view:cache
+
+# Restart the app container
+echo "Restarting application container..."
+docker-compose restart ${projectName}_app
 
 echo "Deployment complete!"
   `;
@@ -502,13 +541,14 @@ pipelines:
 
 export const getDotEnvFileForLaravel = (projectName) => {
   return `
+# Application
 APP_NAME=${projectName}
 APP_ENV=local
 APP_KEY=base64:YOUR_APP_KEY
 APP_DEBUG=true
 APP_URL=http://localhost
 
-# Docker
+# Docker application port
 APP_PORT=8000
 
 # Database
@@ -526,5 +566,9 @@ PMA_PORT=8080
 CACHE_DRIVER=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
+
+# Timezone
+APP_TIMEZONE=UTC
+
   `;
 };
