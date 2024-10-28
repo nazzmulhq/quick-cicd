@@ -60,11 +60,7 @@ const checkPHPComposerJson = async () => {
     process.exit(1);
   }
   const composer = JSON.parse(fs.readFileSync('./composer.json', 'utf-8'));
-  return String(composer.name)
-    .trim()
-    .split('/')
-    .join('-')
-    .toLowerCase();
+  return 'my-laravel-project';
 };
 
 const checkNodeVersion = async () => {
