@@ -18,7 +18,7 @@ import {
   getDockerComposeFileForLaravel,
   getDockerFile,
   getDockerFileForBackendNode,
-  getDockerFileForLaravel,
+  getDockerFileForBackendPHPLaravel,
   getDotEnvFile,
   getDotEnvFileForBackendNode,
   getDotEnvFileForLaravel,
@@ -60,14 +60,20 @@ const checkPHPComposerJson = async () => {
     process.exit(1);
   }
   const composer = JSON.parse(fs.readFileSync('./composer.json', 'utf-8'));
-  return composer.name;
+  return String(composer.name)
+    .trim()
+    .split('/')
+    .join('-')
+    .toLowerCase();
 };
 
 const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
-  return String(nodeVersion).trim().slice(1);
+  return String(nodeVersion)
+    .trim()
+    .slice(1);
 };
-const checkPHPVersion = (async) => {
+const checkPHPVersion = async => {
   const phpVersion = cp
     .execSync(`php -r "echo PHP_VERSION . PHP_EOL;"`)
     .toString();
@@ -110,7 +116,7 @@ async function main() {
     'bitbucket-pipelines.yml',
   ];
 
-  const existFiles = isExistFiles.filter((file) =>
+  const existFiles = isExistFiles.filter(file =>
     fs.existsSync(path.join(currentDir, file))
   );
 
@@ -224,7 +230,7 @@ async function main() {
     'php-(laravel)': [
       {
         name: 'Dockerfile',
-        content: getDockerFileForLaravel(dependency),
+        content: getDockerFileForBackendPHPLaravel(dependency),
       },
       {
         name: 'docker-compose.yml',
@@ -270,7 +276,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(chalk.red('Error:'), error);
   process.exit(1);
 });

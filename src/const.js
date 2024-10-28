@@ -1,6 +1,6 @@
 // for front-end react
 
-export const getDockerFile = (nodeVersion) => {
+export const getDockerFile = nodeVersion => {
   return `
 FROM ${nodeVersion}
 
@@ -10,7 +10,7 @@ EXPOSE 3000
 `;
 };
 
-export const getDockerComposeFile = (projectName) => {
+export const getDockerComposeFile = projectName => {
   return `
     version: "3.9"
     services:
@@ -34,7 +34,7 @@ export const getDockerComposeFile = (projectName) => {
             driver: bridge
     `;
 };
-export const getEcosystemConfigJsFile = (projectName) => {
+export const getEcosystemConfigJsFile = projectName => {
   return `
     module.exports = {
         apps: [
@@ -59,7 +59,7 @@ export const getEcosystemConfigJsFile = (projectName) => {
     `;
 };
 
-export const getDeployShFile = (projectName) => {
+export const getDeployShFile = projectName => {
   return `
     git pull
     docker-compose down
@@ -122,7 +122,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFile = (projectName) => {
+export const getDotEnvFile = projectName => {
   return `
 PORT=3000
   `;
@@ -130,7 +130,7 @@ PORT=3000
 
 // for back-end nodejs
 
-export const getDockerFileForBackendNode = (nodeVersion) => {
+export const getDockerFileForBackendNode = nodeVersion => {
   return `
 # Use the official Node.js image as the base image
 FROM ${nodeVersion}
@@ -155,7 +155,7 @@ CMD ["npm", "run", "start:dev"]
 `;
 };
 
-export const getDockerComposeFileForBackendNode = (projectName) => {
+export const getDockerComposeFileForBackendNode = projectName => {
   return `
 version: '3.8'
 services:
@@ -225,7 +225,7 @@ volumes:
 `;
 };
 
-export const getEcosystemConfigJsFileForBackendNode = (projectName) => {
+export const getEcosystemConfigJsFileForBackendNode = projectName => {
   return `
 module.exports = {
   apps: [
@@ -250,7 +250,7 @@ module.exports = {
 `;
 };
 
-export const getDeployShFileForBackendNode = (projectName) => {
+export const getDeployShFileForBackendNode = projectName => {
   return `
 git pull
 docker-compose down
@@ -317,7 +317,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFileForBackendNode = (projectName) => {
+export const getDotEnvFileForBackendNode = projectName => {
   return `
 PORT=3000
 # DB
@@ -349,10 +349,10 @@ PHP_MY_ADMIN_PORT=3309
 
 // for php
 
-export const getDockerFileForBackendPHPLaravel = (phpVersion) => {
+export const getDockerFileForBackendPHPLaravel = phpVersion => {
   return `
 # Use the official PHP image as the base image
-FROM php:${phpVersion}-fpm
+FROM ${phpVersion}
 
 # Set the working directory in the container
 WORKDIR /app
@@ -394,11 +394,11 @@ USER www-data
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
-CMD ["php-fpm"]
+
   `;
 };
 
-export const getDockerComposeFileForLaravel = (projectName) => {
+export const getDockerComposeFileForLaravel = projectName => {
   return `
 version: "3.8"
 
@@ -407,8 +407,10 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: ${projectName}_app
+    image: \${COMPOSE_PROJECT_NAME:?err}
+    tty: true
     restart: unless-stopped
+    container_name: \${COMPOSE_PROJECT_NAME:?err}
     working_dir: /app
     volumes:
       - ./:/app
@@ -462,41 +464,22 @@ volumes:
   `;
 };
 
-export const getDeployShFileForLaravel = (projectName) => {
+export const getDeployShFileForLaravel = projectName => {
   return `
 #!/bin/bash
 
-# Pull the latest code from the repository
-echo "Pulling latest code from repository..."
 git pull origin main
+docker compose down
+docker compose up -d --build
 
-# Stop and remove the current containers
-echo "Stopping and removing current containers..."
-docker-compose down
-
-# Build and start the containers in detached mode
-echo "Building and starting containers..."
-docker-compose up -d --build
-
-# Install dependencies in the app container
-echo "Installing dependencies..."
 docker exec -it ${projectName}_app composer install --optimize-autoloader --no-dev
 
-# Run migrations
-echo "Running database migrations..."
 docker exec -it ${projectName}_app php artisan migrate --force
-
-# Clear and cache configurations, routes, views
-echo "Clearing and caching configurations..."
 docker exec -it ${projectName}_app php artisan config:cache
 docker exec -it ${projectName}_app php artisan route:cache
 docker exec -it ${projectName}_app php artisan view:cache
-
-# Restart the app container
-echo "Restarting application container..."
 docker-compose restart ${projectName}_app
 
-echo "Deployment complete!"
   `;
 };
 
@@ -539,7 +522,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFileForLaravel = (projectName) => {
+export const getDotEnvFileForLaravel = projectName => {
   return `
 # Application
 APP_NAME=${projectName}
@@ -549,6 +532,7 @@ APP_DEBUG=true
 APP_URL=http://localhost
 
 # Docker application port
+COMPOSE_PROJECT_NAME=${projectName}
 APP_PORT=8000
 
 # Database
