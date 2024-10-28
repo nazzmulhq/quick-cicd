@@ -407,10 +407,10 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: \${COMPOSE_PROJECT_NAME:?err}
+    image: \${COMPOSE_PROJECT_NAME:?err}_image
     tty: true
     restart: unless-stopped
-    container_name: \${COMPOSE_PROJECT_NAME:?err}
+    container_name: \${COMPOSE_PROJECT_NAME:?err}_container
     working_dir: /app
     volumes:
       - ./:/app
@@ -430,10 +430,12 @@ services:
       DB_PASSWORD: \${DB_PASSWORD}
     networks:
       - ${projectName}_network
+    depends_on:
+      - db
 
   db:
     image: mysql:8.0
-    container_name: \${COMPOSE_PROJECT_NAME:?err}
+    container_name: \${COMPOSE_PROJECT_NAME:?err}_db
     environment:
       MYSQL_DATABASE: \${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
@@ -472,14 +474,17 @@ git pull origin main
 docker compose down
 docker compose up -d --build
 
-docker exec -it ${projectName} chmod -R 775 /app/storage /app/bootstrap/cache
-docker exec -it  ${projectName} chown -R www-data:www-data /app/storage /app/bootstrap/cache
+docker exec -it ${projectName}_container chmod -R 775 /app/storage /app/bootstrap/cache
+docker exec -it  ${projectName}_container chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-docker exec -it  ${projectName} composer install --optimize-autoloader --no-dev
-docker exec -it  ${projectName} php artisan migrate --force
-docker exec -it  ${projectName} php artisan config:cache
-docker exec -it  ${projectName} php artisan route:cache
-docker exec -it  ${projectName} php artisan view:cache
+docker exec -it  ${projectName}_container composer install --optimize-autoloader --no-dev
+docker exec -it  ${projectName}_container php artisan key:generate
+docker exec -it  ${projectName}_container php artisan storage:link
+docker exec -it  ${projectName}_container php artisan migrate:fresh --seed
+docker exec -it  ${projectName}_container php artisan optimize:clear
+docker exec -it  ${projectName}_container php artisan config:cache
+docker exec -it  ${projectName}_container php artisan route:cache
+docker exec -it  ${projectName}_container php artisan view:cache
   `;
 };
 
