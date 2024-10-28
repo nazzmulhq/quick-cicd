@@ -433,7 +433,7 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: ${projectName}_db
+    container_name: \${COMPOSE_PROJECT_NAME:?err}
     environment:
       MYSQL_DATABASE: \${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
@@ -472,14 +472,14 @@ git pull origin main
 docker compose down
 docker compose up -d --build
 
-docker exec -it ${projectName}_app composer install --optimize-autoloader --no-dev
+docker exec -it ${projectName} chmod -R 775 /app/storage /app/bootstrap/cache
+docker exec -it  ${projectName} chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-docker exec -it ${projectName}_app php artisan migrate --force
-docker exec -it ${projectName}_app php artisan config:cache
-docker exec -it ${projectName}_app php artisan route:cache
-docker exec -it ${projectName}_app php artisan view:cache
-docker-compose restart ${projectName}_app
-
+docker exec -it  ${projectName} composer install --optimize-autoloader --no-dev
+docker exec -it  ${projectName} php artisan migrate --force
+docker exec -it  ${projectName} php artisan config:cache
+docker exec -it  ${projectName} php artisan route:cache
+docker exec -it  ${projectName} php artisan view:cache
   `;
 };
 
@@ -538,7 +538,7 @@ APP_PORT=8000
 # Database
 DB_CONNECTION=mysql
 DB_HOST=db
-DB_PORT=3306
+DB_PORT=3310
 DB_DATABASE=${projectName}
 DB_USERNAME=root
 DB_PASSWORD=123456
