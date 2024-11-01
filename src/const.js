@@ -358,21 +358,7 @@ FROM ${phpVersion}
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    locales \
-    zip \
-    jpegoptim optipng pngquant gifsicle \
-    vim \
-    unzip \
-    git \
-    curl \
-    libonig-dev \
-    libzip-dev \
-    supervisor
+RUN apt-get update && apt-get install -y     build-essential     libpng-dev     libjpeg62-turbo-dev     libfreetype6-dev     locales     zip     jpegoptim optipng pngquant gifsicle     vim     unzip     git     curl     libonig-dev     libzip-dev     supervisor
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -389,11 +375,6 @@ COPY . /app
 # Copy existing application directory permissions
 COPY --chown=www-data:www-data . /app
 
-# Change current user to www
-USER www-data
-
-# Expose port 9000 and start php-fpm server
-EXPOSE 9000
 
   `;
 };
@@ -415,19 +396,16 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "\${APP_PORT}:9000"
+      - "\${APP_PORT}:80"
+    env_file:
+      - .env
     environment:
-      APP_NAME: \${APP_NAME}
-      APP_ENV: \${APP_ENV}
-      APP_KEY: \${APP_KEY}
-      APP_DEBUG: \${APP_DEBUG}
-      APP_URL: \${APP_URL}
-      DB_CONNECTION: \${DB_CONNECTION}
-      DB_HOST: db
-      DB_PORT: \${DB_PORT}
-      DB_DATABASE: \${DB_DATABASE}
-      DB_USERNAME: \${DB_USERNAME}
-      DB_PASSWORD: \${DB_PASSWORD}
+      - TZ=Asia/Dhaka
+      - WEB_DOCUMENT_ROOT=/app/public
+      - php.session.gc_maxlifetime=31536000
+      - php.session.cookie_lifetime=31536000
+      - php.memory_limit=2048M
+      - PHP_DISPLAY_ERRORS=1
     networks:
       - ${projectName}_network
     depends_on:
@@ -436,9 +414,16 @@ services:
   db:
     image: mysql:8.0
     container_name: \${COMPOSE_PROJECT_NAME:?err}_db
+    command: --max_allowed_packet=32505856
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: \${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: \${DB_PASSWORD}
+      MYSQL_USER: \${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+      TZ: Asia/Dhaka
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -452,8 +437,7 @@ services:
     ports:
       - "\${PMA_PORT}:80"
     environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+     - PMA_ARBITRARY=1
     networks:
       - ${projectName}_network
 
@@ -529,16 +513,32 @@ pipelines:
 
 export const getDotEnvFileForLaravel = projectName => {
   return `
-# Application
 APP_NAME=${projectName}
 APP_ENV=local
-APP_KEY=base64:YOUR_APP_KEY
+APP_KEY=base64:ga9YARyP2fPJzl4bSt7ni5iOJgk7RfrhewERxd7mN9o=
 APP_DEBUG=true
-APP_URL=http://localhost
+APP_TIMEZONE=UTC
+APP_URL=127.0.0.1
+
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+APP_MAINTENANCE_DRIVER=file
+# APP_MAINTENANCE_STORE=database
+
+PHP_CLI_SERVER_WORKERS=4
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
 
 # Docker application port
 COMPOSE_PROJECT_NAME=${projectName}
-APP_PORT=8000
+APP_PORT=8090
 
 # Database
 DB_CONNECTION=mysql
@@ -547,17 +547,47 @@ DB_PORT=3310
 DB_DATABASE=${projectName}
 DB_USERNAME=root
 DB_PASSWORD=123456
-
+MYSQL_ROOT_PASSWORD=123456
 # PhpMyAdmin
 PMA_PORT=8080
 
-# Cache and session
-CACHE_DRIVER=file
-SESSION_DRIVER=file
-QUEUE_CONNECTION=sync
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
 
-# Timezone
-APP_TIMEZONE=UTC
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+
+CACHE_STORE=database
+CACHE_PREFIX=
+
+MEMCACHED_HOST=127.0.0.1
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="\${APP_NAME}"
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+VITE_APP_NAME="\${APP_NAME}"
+
 
   `;
 };
