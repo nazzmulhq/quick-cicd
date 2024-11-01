@@ -84,7 +84,7 @@ const questions = [
     choices: [
       'frontend-(react or next.js)',
       'node-(express or nest.js)',
-      'php-(laravel)',
+      'php-(coming soon)',
       'python-(coming soon)',
     ],
     default: 'frontend (react or next.js)',
