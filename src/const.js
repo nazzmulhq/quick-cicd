@@ -2,29 +2,11 @@
 
 export const getDockerFile = nodeVersion => {
   return `
-# Use the official Node.js image as the base image
 FROM ${nodeVersion}
 
-# Set the working directory in the container
-WORKDIR /app
+RUN npm install pm2 -g
 
-# Copy the dependencies file to the working directory
-COPY package.json .
-
-# Install all the dependencies
-RUN npm install --legacy-peer-deps
-
-# Copy the content of the client folder to the working directory
-COPY . .
-
-# Expose the port the app runs in
 EXPOSE 3000
-
-# Command to run the server in development mode
-# CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "--port", "3000"]
-
-# Command to run the server in production mode
-CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "--port", "3000"]
 `;
 };
 
@@ -84,7 +66,7 @@ export const getDeployShFile = projectName => {
     docker compose up -d
     docker exec ${projectName}_container npm install --legacy-peer-deps
     docker exec ${projectName}_container npm run build
-    docker exec ${projectName}_container npm run start
+    docker exec ${projectName}_container pm2 start --only "${projectName}-prod"
     `;
 };
 

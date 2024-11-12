@@ -172,7 +172,10 @@ async function main() {
         name: 'docker-compose.yml',
         content: getDockerComposeFile(projectName),
       },
-
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFile(projectName),
+      },
       { name: 'deploy.sh', content: getDeployShFile(projectName) },
       {
         name: 'bitbucket-pipelines.yml',
