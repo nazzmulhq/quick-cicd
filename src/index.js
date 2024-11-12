@@ -9,19 +9,14 @@ import path from 'path';
 import {
   getBitbucketPipelinesFile,
   getBitbucketPipelinesFileForBackendNode,
-  getBitbucketPipelinesFileForLaravel,
   getDeployShFile,
   getDeployShFileForBackendNode,
-  getDeployShFileForLaravel,
   getDockerComposeFile,
   getDockerComposeFileForBackendNode,
-  getDockerComposeFileForLaravel,
   getDockerFile,
   getDockerFileForBackendNode,
-  getDockerFileForBackendPHPLaravel,
   getDotEnvFile,
   getDotEnvFileForBackendNode,
-  getDotEnvFileForLaravel,
 } from './const.js';
 
 async function shellCommand(command) {
@@ -185,7 +180,7 @@ async function main() {
       },
       {
         name: 'env.example',
-        content: getDotEnvFile(answers.projectName),
+        content: getDotEnvFile(projectName),
       },
     ],
     'node-(express or nest.js)': [
@@ -215,33 +210,7 @@ async function main() {
         content: getDotEnvFileForBackendNode(projectName),
       },
     ],
-    'php-(laravel)': [
-      {
-        name: 'Dockerfile',
-        content: getDockerFileForBackendPHPLaravel(dependency),
-      },
-      {
-        name: 'docker-compose.yml',
-        content: getDockerComposeFileForLaravel(projectName),
-      },
-
-      {
-        name: 'deploy.sh',
-        content: getDeployShFileForLaravel(projectName),
-      },
-      {
-        name: 'bitbucket-pipelines.yml',
-        content: getBitbucketPipelinesFileForLaravel(
-          projectName,
-          dependency,
-          caches
-        ),
-      },
-      {
-        name: 'example.env',
-        content: getDotEnvFileForLaravel(projectName),
-      },
-    ],
+    'php-(laravel)': [],
     python: [],
   };
 
