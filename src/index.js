@@ -17,6 +17,7 @@ import {
   getDockerFileForBackendNode,
   getDotEnvFile,
   getDotEnvFileForBackendNode,
+  getEcosystemConfigJsFile,
 } from './const.js';
 
 async function shellCommand(command) {
