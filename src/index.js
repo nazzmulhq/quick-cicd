@@ -22,8 +22,6 @@ import {
   getDotEnvFile,
   getDotEnvFileForBackendNode,
   getDotEnvFileForLaravel,
-  getEcosystemConfigJsFile,
-  getEcosystemConfigJsFileForBackendNode,
 } from './const.js';
 
 async function shellCommand(command) {
@@ -179,10 +177,7 @@ async function main() {
         name: 'docker-compose.yml',
         content: getDockerComposeFile(projectName),
       },
-      {
-        name: 'ecosystem.config.js',
-        content: getEcosystemConfigJsFile(projectName),
-      },
+
       { name: 'deploy.sh', content: getDeployShFile(projectName) },
       {
         name: 'bitbucket-pipelines.yml',
@@ -202,10 +197,7 @@ async function main() {
         name: 'docker-compose.yml',
         content: getDockerComposeFileForBackendNode(projectName),
       },
-      {
-        name: 'ecosystem.config.js',
-        content: getEcosystemConfigJsFileForBackendNode(projectName),
-      },
+
       {
         name: 'deploy.sh',
         content: getDeployShFileForBackendNode(projectName),

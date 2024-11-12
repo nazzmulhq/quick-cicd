@@ -2,11 +2,29 @@
 
 export const getDockerFile = nodeVersion => {
   return `
+# Use the official Node.js image as the base image
 FROM ${nodeVersion}
 
-RUN npm install pm2 -g
+# Set the working directory in the container
+WORKDIR /app
 
+# Copy the dependencies file to the working directory
+COPY package.json .
+
+# Install all the dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy the content of the client folder to the working directory
+COPY . .
+
+# Expose the port the app runs in
 EXPOSE 3000
+
+# Command to run the server in development mode
+# CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "--port", "3000"]
+
+# Command to run the server in production mode
+CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "--port", "3000"]
 `;
 };
 
@@ -18,19 +36,19 @@ export const getDockerComposeFile = projectName => {
             build:
                 context: ./
                 dockerfile: Dockerfile
-            image: ${projectName}
+            image: \${COMPOSE_PROJECT_NAME:?err}_image
             tty: true
             restart: unless-stopped
-            container_name: ${projectName}
+            container_name: \${COMPOSE_PROJECT_NAME:?err}_container
             working_dir: /app/
             volumes:
                 - ./:/app
             ports:
                 - '\${PORT}:3000'
             networks:
-                - ${projectName}
+                - \${COMPOSE_PROJECT_NAME:?err}_network
     networks:
-        ${projectName}:
+        ${projectName}_network:
             driver: bridge
     `;
 };
@@ -62,11 +80,11 @@ export const getEcosystemConfigJsFile = projectName => {
 export const getDeployShFile = projectName => {
   return `
     git pull
-    docker-compose down
-    docker-compose up -d
-    docker exec ${projectName} npm ci
-    docker exec ${projectName} npm run build
-    docker exec ${projectName} pm2 start --only "${projectName}-prod"
+    docker compose down
+    docker compose up -d
+    docker exec ${projectName}_container npm install --legacy-peer-deps
+    docker exec ${projectName}_container npm run build
+    docker exec ${projectName}_container npm run start
     `;
 };
 
@@ -125,6 +143,8 @@ pipelines:
 export const getDotEnvFile = projectName => {
   return `
 PORT=3000
+
+COMPOSE_PROJECT_NAME=${projectName}
   `;
 };
 
@@ -142,7 +162,7 @@ WORKDIR /app
 COPY package.json .
 
 # Install all the dependencies
-RUN npm install pm2 -g && npm install
+RUN npm install --legacy-peer-deps
 
 # Copy the content of the server folder to the working directory
 COPY . .
@@ -150,8 +170,11 @@ COPY . .
 # Expose the port the app runs in
 EXPOSE 3010
 
-# Command to run the server
-CMD ["npm", "run", "start:dev"]
+# Command to run the server in development mode
+CMD ["npm", "run", "start:dev", "--", "-H", "localhost", "--port", "3010"]
+
+# Command to run the server in production mode
+# CMD ["npm", "run", "start:prod", "--", "-H", "localhost", "--port", "3010"]
 `;
 };
 
@@ -163,15 +186,15 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: \${COMPOSE_PROJECT_NAME:?err}
+    image: \${COMPOSE_PROJECT_NAME:?err}_image
     tty: true
     restart: unless-stopped
-    container_name: \${COMPOSE_PROJECT_NAME:?err}
+    container_name: \${COMPOSE_PROJECT_NAME:?err}_container
     working_dir: /app/
     volumes:
       - ./:/app
     networks:
-      - ${projectName}_network
+      - \${COMPOSE_PROJECT_NAME:?err}_network
     ports:
       - '\${HOST_PORT}:3010'
     depends_on:
@@ -192,7 +215,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - ${projectName}_network
+      - \${COMPOSE_PROJECT_NAME:?err}_network
     ports:
       - '\${DOCKER_DB_HOST_PORT:?err}:3306'
 
@@ -207,7 +230,7 @@ services:
       PMA_VERBOSE: 'Docker MySQL,Local MySQL'
       MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
     networks:
-      - ${projectName}_network
+      - \${COMPOSE_PROJECT_NAME:?err}_network
 
   redis:
     image: redis:alpine
@@ -215,7 +238,7 @@ services:
     ports:
       - '\${DOCKER_REDIS_PORT:?err}:6379'
     networks:
-      - ${projectName}_network
+      - \${COMPOSE_PROJECT_NAME:?err}_network
 
 networks:
   ${projectName}_network:
@@ -255,9 +278,9 @@ export const getDeployShFileForBackendNode = projectName => {
 git pull
 docker-compose down
 docker-compose up -d
-docker exec ${projectName} npm ci
-docker exec ${projectName} npm run build
-docker exec ${projectName} pm2 start --only "${projectName}-prod"
+docker exec ${projectName}_container npm install --legacy-peer-deps
+docker exec ${projectName}_container npm run build
+docker exec ${projectName}_container npm run start:prod
 `;
 };
 
