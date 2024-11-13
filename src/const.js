@@ -1,6 +1,6 @@
 // for front-end react
 
-export const getDockerFile = (nodeVersion) => {
+export const getDockerFile = nodeVersion => {
   return `
 FROM ${nodeVersion}
 
@@ -10,7 +10,7 @@ EXPOSE 3000
 `;
 };
 
-export const getDockerComposeFile = (projectName) => {
+export const getDockerComposeFile = projectName => {
   return `
     version: "3.9"
     services:
@@ -34,7 +34,7 @@ export const getDockerComposeFile = (projectName) => {
             driver: bridge
     `;
 };
-export const getEcosystemConfigJsFile = (projectName) => {
+export const getEcosystemConfigJsFile = projectName => {
   return `
     module.exports = {
         apps: [
@@ -63,7 +63,7 @@ export const getDeployShFile = (projectType, projectName) => {
   let command = '';
   if (projectType === 'NextJS-(React)') {
     command = `docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start`;
-  } else if (projectType === 'vite.js-(react)') {
+  } else if (projectType === 'ViteJS-(React)') {
     command = `docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview -- --host 0.0.0.0 --port 3000`;
   }
   return `
@@ -130,7 +130,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFile = (projectName) => {
+export const getDotEnvFile = projectName => {
   return `
 PORT=3000
 
@@ -140,7 +140,7 @@ COMPOSE_PROJECT_NAME=${projectName}
 
 // for back-end nodejs
 
-export const getDockerFileForBackendNode = (nodeVersion) => {
+export const getDockerFileForBackendNode = nodeVersion => {
   return `
 # Use the official Node.js image as the base image
 FROM ${nodeVersion}
@@ -168,7 +168,7 @@ EXPOSE 3010
 `;
 };
 
-export const getDockerComposeFileForBackendNode = (projectName) => {
+export const getDockerComposeFileForBackendNode = projectName => {
   return `
 version: '3.8'
 services:
@@ -238,7 +238,7 @@ volumes:
 `;
 };
 
-export const getEcosystemConfigJsFileForBackendNode = (projectName) => {
+export const getEcosystemConfigJsFileForBackendNode = projectName => {
   return `
 module.exports = {
   apps: [
@@ -263,7 +263,7 @@ module.exports = {
 `;
 };
 
-export const getDeployShFileForBackendNode = (projectName) => {
+export const getDeployShFileForBackendNode = projectName => {
   return `
 git pull
 docker compose down
@@ -332,7 +332,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFileForBackendNode = (projectName) => {
+export const getDotEnvFileForBackendNode = projectName => {
   return `
 PORT=3000
 # DB
@@ -364,7 +364,7 @@ PHP_MY_ADMIN_PORT=3309
 
 // for php
 
-export const getDockerFileForBackendPHPLaravel = (phpVersion) => {
+export const getDockerFileForBackendPHPLaravel = phpVersion => {
   return `
 # Use the official PHP image as the base image
 FROM ${phpVersion}
@@ -394,7 +394,7 @@ COPY --chown=www-data:www-data . /app
   `;
 };
 
-export const getDockerComposeFileForLaravel = (projectName) => {
+export const getDockerComposeFileForLaravel = projectName => {
   return `
 version: "3.8"
 
@@ -465,7 +465,7 @@ volumes:
   `;
 };
 
-export const getDeployShFileForLaravel = (projectName) => {
+export const getDeployShFileForLaravel = projectName => {
   return `
 #!/bin/bash
 
@@ -526,7 +526,7 @@ pipelines:
   `;
 };
 
-export const getDotEnvFileForLaravel = (projectName) => {
+export const getDotEnvFileForLaravel = projectName => {
   return `
 APP_NAME=${projectName}
 APP_ENV=local
