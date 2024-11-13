@@ -2,7 +2,7 @@
 
 Quick CICD With Bitbucket is a tool designed to streamline the setup of Continuous Integration and Continuous Deployment (CI/CD) pipelines for your projects using Bitbucket. This tool automates the creation of essential configuration files and scripts required for Docker-based deployments, making it easier to get your project up and running with CI/CD.
 
-Check out the complete documentation [HERE](https://www.npmjs.com/package/quick-cicd).<br/>
+Check out the complete documentation [HERE](https://nazmulhaque.netlify.app/quick-cicd).<br/>
 
 ## Features
 
