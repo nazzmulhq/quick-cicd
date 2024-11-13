@@ -70,7 +70,7 @@ export const getDeployShFile = projectName => {
     # next js or react js
     docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start 
     # vite js
-    # docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview
+    # docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview -- --host 0.0.0.0 --port 3000
     docker exec ${projectName}_container pm2 save
     `;
 };
@@ -149,16 +149,16 @@ WORKDIR /app
 COPY package.json .
 
 # Install all the dependencies
-RUN npm install --legacy-peer-deps
+RUN npm install pm2 -g && npm install --legacy-peer-deps 
 
 # Copy the content of the server folder to the working directory
 COPY . .
 
-# Expose the port the app runs in
+# Expose the port the app runs in 
 EXPOSE 3010
 
 # Command to run the server in development mode
-CMD ["npm", "run", "start:dev", "--", "-H", "localhost", "--port", "3010"]
+#CMD ["npm", "run", "start:dev", "--", "-H", "localhost", "--port", "3010"]
 
 # Command to run the server in production mode
 # CMD ["npm", "run", "start:prod", "--", "-H", "localhost", "--port", "3010"]
