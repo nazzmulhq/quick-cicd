@@ -76,11 +76,11 @@ const questions = [
     name: 'projectType',
     message: 'Select project type:',
     choices: [
-      "vite.js-(react)"
-      'next.js',
-      'node-(express or nest.js)',
-      'php-(coming soon)',
-      'python-(coming soon)',
+      "ViteJS-(React)"
+      'NextJS-(React)',
+      'NodeJS-(ExpressJS or NestJS)',
+      'PHP-(Coming Soon)',
+      'Python-(Coming Soon)',
     ],
     default: 'frontend (react or next.js)',
   },
@@ -121,11 +121,11 @@ async function main() {
 
   const answers = await inquirer.prompt(questions);
 
-  if (answers.projectType === 'php-(coming soon)') {
+  if (answers.projectType === 'PHP-(Coming Soon)') {
     console.log(chalk.red('Error:'), 'PHP is not supported yet.');
     process.exit(1);
   }
-  if (answers.projectType === 'python-(coming soon)') {
+  if (answers.projectType === 'Python-(Coming Soon)') {
     console.log(chalk.red('Error:'), 'Python is not supported yet.');
     process.exit(1);
   }
@@ -135,8 +135,8 @@ async function main() {
   let caches = '';
 
   if (
-    answers.projectType === 'next.js' || answers.projectType === 'vite.js-(react)'
-    answers.projectType === 'node-(express or nest.js)'
+    answers.projectType === 'NextJS-(React)' || answers.projectType === 'ViteJS-(React)'
+    answers.projectType === 'NodeJS-(ExpressJS or NestJS)'
   ) {
     projectName = await checkPackageJson();
     const nodeVersion = await checkNodeVersion('node -v');
@@ -144,7 +144,7 @@ async function main() {
     caches = 'npm';
   }
 
-  if (answers.projectType === 'php-(laravel)') {
+  if (answers.projectType === 'PHP-(Laravel)') {
     projectName = await checkPHPComposerJson();
     const phpVersion = await checkPHPVersion();
     dependency = `php:${phpVersion.trim()}`;
@@ -168,7 +168,7 @@ async function main() {
   });
 
   const files = {
-    'next.js': [
+    'NextJS-(React)': [
       { name: 'Dockerfile', content: getDockerFile(dependency) },
       {
         name: 'docker-compose.yml',
@@ -188,7 +188,7 @@ async function main() {
         content: getDotEnvFile(projectName),
       },
     ],
-    'vite.js-(react)': [
+    'ViteJS-(React)': [
       { name: 'Dockerfile', content: getDockerFile(dependency) },
       {
         name: 'docker-compose.yml',
@@ -208,7 +208,7 @@ async function main() {
         content: getDotEnvFile(projectName),
       },
     ],
-    'node-(express or nest.js)': [
+    'NodeJS-(ExpressJS or NestJS)': [
       {
         name: 'Dockerfile',
         content: getDockerFileForBackendNode(dependency),
@@ -235,8 +235,8 @@ async function main() {
         content: getDotEnvFileForBackendNode(projectName),
       },
     ],
-    'php-(laravel)': [],
-    python: [],
+    'PHP-(Laravel)': [],
+    PythonDjango: [],
   };
 
   try {
