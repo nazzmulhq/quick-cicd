@@ -59,7 +59,13 @@ export const getEcosystemConfigJsFile = projectName => {
     `;
 };
 
-export const getDeployShFile = projectName => {
+export const getDeployShFile = (projectType, projectName) => {
+  let command = '';
+  if (projectType === 'next.js') {
+    command = `docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start`;
+  } else if (projectType === 'vite.js-(react)') {
+    command = `docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview -- --host 0.0.0.0 --port 3000`;
+  }
   return `
     git pull
     docker compose down
@@ -67,10 +73,7 @@ export const getDeployShFile = projectName => {
     docker exec ${projectName}_container npm install --legacy-peer-deps
     docker exec ${projectName}_container npm run build
     docker exec ${projectName}_container pm2 delete "${projectName}-prod"
-    # next js or react js
-    docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start 
-    # vite js
-    # docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview -- --host 0.0.0.0 --port 3000
+    ${command}
     docker exec ${projectName}_container pm2 save
     `;
 };

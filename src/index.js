@@ -76,7 +76,8 @@ const questions = [
     name: 'projectType',
     message: 'Select project type:',
     choices: [
-      'frontend-(react or next.js)',
+      "vite.js-(react)"
+      'next.js',
       'node-(express or nest.js)',
       'php-(coming soon)',
       'python-(coming soon)',
@@ -134,7 +135,7 @@ async function main() {
   let caches = '';
 
   if (
-    answers.projectType === 'frontend-(react or next.js)' ||
+    answers.projectType === 'next.js' || answers.projectType === 'vite.js-(react)'
     answers.projectType === 'node-(express or nest.js)'
   ) {
     projectName = await checkPackageJson();
@@ -167,7 +168,7 @@ async function main() {
   });
 
   const files = {
-    'frontend-(react or next.js)': [
+    'next.js': [
       { name: 'Dockerfile', content: getDockerFile(dependency) },
       {
         name: 'docker-compose.yml',
@@ -177,7 +178,27 @@ async function main() {
         name: 'ecosystem.config.js',
         content: getEcosystemConfigJsFile(projectName),
       },
-      { name: 'deploy.sh', content: getDeployShFile(projectName) },
+      { name: 'deploy.sh', content: getDeployShFile(answers.projectType, projectName) },
+      {
+        name: 'bitbucket-pipelines.yml',
+        content: getBitbucketPipelinesFile(projectName, dependency, caches),
+      },
+      {
+        name: 'env.example',
+        content: getDotEnvFile(projectName),
+      },
+    ],
+    'vite.js-(react)': [
+      { name: 'Dockerfile', content: getDockerFile(dependency) },
+      {
+        name: 'docker-compose.yml',
+        content: getDockerComposeFile(projectName),
+      },
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFile(projectName),
+      },
+      { name: 'deploy.sh', content: getDeployShFile(answers.projectType, projectName) },
       {
         name: 'bitbucket-pipelines.yml',
         content: getBitbucketPipelinesFile(projectName, dependency, caches),
