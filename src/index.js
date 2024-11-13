@@ -76,7 +76,7 @@ const questions = [
     name: 'projectType',
     message: 'Select project type:',
     choices: [
-      "ViteJS-(React)"
+      "ViteJS-(React)",
       'NextJS-(React)',
       'NodeJS-(ExpressJS or NestJS)',
       'PHP-(Coming Soon)',
