@@ -66,7 +66,12 @@ export const getDeployShFile = projectName => {
     docker compose up -d
     docker exec ${projectName}_container npm install --legacy-peer-deps
     docker exec ${projectName}_container npm run build
-    docker exec ${projectName}_container pm2 start --only "${projectName}-prod"
+    docker exec ${projectName}_container pm2 delete "${projectName}-prod"
+    # next js or react js
+    docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start 
+    # vite js
+    # docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run preview
+    docker exec ${projectName}_container pm2 save
     `;
 };
 
