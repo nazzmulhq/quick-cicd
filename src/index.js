@@ -59,11 +59,9 @@ const checkPHPComposerJson = async () => {
 
 const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
-  return String(nodeVersion)
-    .trim()
-    .slice(1);
+  return String(nodeVersion).trim().slice(1);
 };
-const checkPHPVersion = async => {
+const checkPHPVersion = (async) => {
   const phpVersion = cp
     .execSync(`php -r "echo PHP_VERSION . PHP_EOL;"`)
     .toString();
@@ -76,7 +74,7 @@ const questions = [
     name: 'projectType',
     message: 'Select project type:',
     choices: [
-      "ViteJS-(React)",
+      'ViteJS-(React)',
       'NextJS-(React)',
       'NodeJS-(ExpressJS or NestJS)',
       'PHP-(Coming Soon)',
@@ -107,7 +105,7 @@ async function main() {
     'bitbucket-pipelines.yml',
   ];
 
-  const existFiles = isExistFiles.filter(file =>
+  const existFiles = isExistFiles.filter((file) =>
     fs.existsSync(path.join(currentDir, file))
   );
 
@@ -135,7 +133,8 @@ async function main() {
   let caches = '';
 
   if (
-    answers.projectType === 'NextJS-(React)' || answers.projectType === 'ViteJS-(React)'
+    answers.projectType === 'NextJS-(React)' ||
+    answers.projectType === 'ViteJS-(React)' ||
     answers.projectType === 'NodeJS-(ExpressJS or NestJS)'
   ) {
     projectName = await checkPackageJson();
@@ -178,7 +177,10 @@ async function main() {
         name: 'ecosystem.config.js',
         content: getEcosystemConfigJsFile(projectName),
       },
-      { name: 'deploy.sh', content: getDeployShFile(answers.projectType, projectName) },
+      {
+        name: 'deploy.sh',
+        content: getDeployShFile(answers.projectType, projectName),
+      },
       {
         name: 'bitbucket-pipelines.yml',
         content: getBitbucketPipelinesFile(projectName, dependency, caches),
@@ -198,7 +200,10 @@ async function main() {
         name: 'ecosystem.config.js',
         content: getEcosystemConfigJsFile(projectName),
       },
-      { name: 'deploy.sh', content: getDeployShFile(answers.projectType, projectName) },
+      {
+        name: 'deploy.sh',
+        content: getDeployShFile(answers.projectType, projectName),
+      },
       {
         name: 'bitbucket-pipelines.yml',
         content: getBitbucketPipelinesFile(projectName, dependency, caches),
@@ -217,7 +222,10 @@ async function main() {
         name: 'docker-compose.yml',
         content: getDockerComposeFileForBackendNode(projectName),
       },
-
+      {
+        name: 'ecosystem.config.js',
+        content: getEcosystemConfigJsFile(projectName),
+      },
       {
         name: 'deploy.sh',
         content: getDeployShFileForBackendNode(projectName),
@@ -258,7 +266,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(chalk.red('Error:'), error);
   process.exit(1);
 });

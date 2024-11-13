@@ -69,7 +69,7 @@ export const getDeployShFile = (projectType, projectName) => {
   return `
     git pull
     docker compose down
-    docker compose up -d
+    docker compose up -d --build
     docker exec ${projectName}_container npm install --legacy-peer-deps
     docker exec ${projectName}_container npm run build
     docker exec ${projectName}_container pm2 delete "${projectName}-prod"
@@ -186,7 +186,7 @@ services:
     networks:
       - \${COMPOSE_PROJECT_NAME:?err}_network
     ports:
-      - '\${HOST_PORT}:3010'
+      - '\${HOST_PORT}:3000'
     depends_on:
       - db
       - redis
@@ -245,7 +245,7 @@ module.exports = {
     {
       name: "${projectName}-prod",
       script: "npm run",
-      args: "start",
+      args: "start:prod",
       interpreter: "/bin/bash",
       env: {
         NODE_ENV: "production",
@@ -266,11 +266,14 @@ module.exports = {
 export const getDeployShFileForBackendNode = (projectName) => {
   return `
 git pull
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d --build
 docker exec ${projectName}_container npm install --legacy-peer-deps
 docker exec ${projectName}_container npm run build
 docker exec ${projectName}_container npm run start:prod
+docker exec ${projectName}_container pm2 delete "${projectName}-prod"
+docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start:prod
+docker exec ${projectName}_container pm2 save
 `;
 };
 
