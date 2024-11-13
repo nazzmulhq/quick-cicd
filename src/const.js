@@ -270,7 +270,6 @@ docker compose down
 docker compose up -d --build
 docker exec ${projectName}_container npm install --legacy-peer-deps
 docker exec ${projectName}_container npm run build
-docker exec ${projectName}_container npm run start:prod
 docker exec ${projectName}_container pm2 delete "${projectName}-prod"
 docker exec ${projectName}_container pm2 start npm --name ${projectName}-prod -- run start:prod
 docker exec ${projectName}_container pm2 save
