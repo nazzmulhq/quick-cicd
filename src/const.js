@@ -5,7 +5,7 @@ export const getDockerFile = (nodeVersion, projectType, projectName) => {
   if (projectType === 'NextJS-(React)') {
     command = `CMD ["pm2-runtime", "start", "npm", "--name", "${projectName}-prod", "--", "run", "start"]`;
   } else if (projectType === 'ViteJS-(React)') {
-    command = `CMD ["pm2-runtime", "start", "npm", "--name", "${projectName}-prod", "--", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]`;
+    command = `CMD ["pm2-runtime", "start", "npm", "--name", "${projectName}-prod", "--", "run", "preview"]`;
   }
   return `
 # Use an official Node.js runtime as a parent image
