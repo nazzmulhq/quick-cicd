@@ -59,9 +59,11 @@ const checkPHPComposerJson = async () => {
 
 const checkNodeVersion = async () => {
   const nodeVersion = cp.execSync('node -v').toString();
-  return String(nodeVersion).trim().slice(1);
+  return String(nodeVersion)
+    .trim()
+    .slice(1);
 };
-const checkPHPVersion = (async) => {
+const checkPHPVersion = async => {
   const phpVersion = cp
     .execSync(`php -r "echo PHP_VERSION . PHP_EOL;"`)
     .toString();
@@ -105,7 +107,7 @@ async function main() {
     'bitbucket-pipelines.yml',
   ];
 
-  const existFiles = isExistFiles.filter((file) =>
+  const existFiles = isExistFiles.filter(file =>
     fs.existsSync(path.join(currentDir, file))
   );
 
@@ -168,7 +170,10 @@ async function main() {
 
   const files = {
     'NextJS-(React)': [
-      { name: 'Dockerfile', content: getDockerFile(dependency) },
+      {
+        name: 'Dockerfile',
+        content: getDockerFile(dependency, answers.projectType, projectName),
+      },
       {
         name: 'docker-compose.yml',
         content: getDockerComposeFile(projectName),
@@ -191,7 +196,10 @@ async function main() {
       },
     ],
     'ViteJS-(React)': [
-      { name: 'Dockerfile', content: getDockerFile(dependency) },
+      {
+        name: 'Dockerfile',
+        content: getDockerFile(dependency, answers.projectType, projectName),
+      },
       {
         name: 'docker-compose.yml',
         content: getDockerComposeFile(projectName),
@@ -266,7 +274,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(chalk.red('Error:'), error);
   process.exit(1);
 });
