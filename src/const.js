@@ -570,6 +570,7 @@ export const getDotEnvFileForBackendPhp = projectName => {
   return `
 APP_URL=http://localhost:8099
 PORT=8099
+DB_CONNECTION=mysql
 DB_HOST=db
 DB_PORT=3306
 DB_DATABASE=${projectName}
