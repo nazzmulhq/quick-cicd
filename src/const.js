@@ -165,6 +165,7 @@ COMPOSE_PROJECT_NAME=${projectName}
 
 // for back-end
 
+// node.js
 export const getDockerFileForBackendNode = nodeVersion => {
   return `
 # Use the official Node.js image as the base image
@@ -379,5 +380,203 @@ MYSQL_ROOT_PASSWORD=123456
 DOCKER_DB_HOST_PORT=3307
 DOCKER_REDIS_PORT=3308
 PHP_MY_ADMIN_PORT=3309
+  `;
+};
+
+// php laravel
+
+export const getDockerFileForBackendPhp = phpVersion => {
+  return `
+# Use the official PHP image as the base image  
+FROM webdevops/php-nginx:8.2
+
+# Set timezone
+ENV TZ=Asia/Dhaka
+
+# Install additional dependencies
+RUN apt-get update && apt-get install -y \
+    mariadb-client \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory
+WORKDIR /app
+
+# Copy Laravel application
+COPY . /app
+
+# Set permissions
+RUN chown -R application:application /app \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Configure cron for Laravel scheduler
+RUN docker-cronjob '* * * * * root /usr/local/bin/php /app/artisan schedule:run >> /app/storage/logs/cron.log 2>&1'
+
+# Enable cron service
+RUN docker-service enable cron
+
+
+
+# Expose web server port
+EXPOSE 80
+
+# Start supervisord
+CMD ["supervisord"]
+`;
+};
+
+export const getDockerComposeFileForBackendPhp = projectName => {
+  return `
+version: "3.7"
+
+services:
+    application:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: \${COMPOSE_PROJECT_NAME:?err}_image
+        tty: true
+        restart: unless-stopped
+        container_name: \${COMPOSE_PROJECT_NAME:?err}_container
+        environment:
+            - TZ=Asia/Dhaka
+            - WEB_DOCUMENT_ROOT=/app/public
+            - php.memory_limit=2048M
+            - php.session.gc_maxlifetime=31536000
+            - php.session.cookie_lifetime=31536000
+            - PHP_DISPLAY_ERRORS=1
+            - PHP_ERROR_REPORTING=E_ALL
+            - PHP_LOG_ERRORS=1
+        ports:
+            - "\${PORT}:80"
+        volumes:
+            - ./:/app
+            - ./storage/logs/cron.log:/app/storage/logs/cron.log
+        networks:
+            - \${COMPOSE_PROJECT_NAME:?err}_network
+        command: >
+            sh -c "
+            php artisan migrate &&
+            supervisord -n
+            "
+
+    db:
+        image: mariadb:10.8.2
+        container_name: \${COMPOSE_PROJECT_NAME:?err}_db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: \${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+            MYSQL_USER: \${DB_USERNAME}
+            MYSQL_PASSWORD: \${DB_PASSWORD}
+            TZ: Asia/Dhaka
+        ports:
+            - "\${DOCKER_MYSQL_PORT}:3306"
+        volumes:
+            - db_data:/var/lib/mysql
+        networks:
+            - \${COMPOSE_PROJECT_NAME:?err}_network
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: \${COMPOSE_PROJECT_NAME:?err}_phpmyadmin
+        restart: unless-stopped
+        environment:
+            PMA_HOST: \${DB_HOST}
+            MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
+        ports:
+            - "\${DOCKER_PHPMYADMIN_PORT}:80"
+        networks:
+            - \${COMPOSE_PROJECT_NAME:?err}_network
+
+networks:
+    ${projectName}_network:
+        driver: bridge
+
+volumes:
+    db_data:
+`;
+};
+
+export const getDeployShFileForBackendPhp = projectName => {
+  return `
+git pull
+docker-compose down
+docker-compose up -d --build
+docker exec ${projectName}_container php artisan migrate
+`;
+};
+
+export const getBitbucketPipelinesFileForBackendPhp = (
+  projectName,
+  imageName,
+  caches
+) => {
+  return `
+image: ${imageName}
+pipelines:
+  default:
+    - step:
+        name: Install, Build, and Deploy
+        script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  branches:
+    master:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+    main:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+    dev:
+      - step:
+          name: Install, Build, and Deploy
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  custom:
+    merge-deploy:
+      - step:
+          name: Manual Deployment After Merge
+          caches:
+            - ${caches}
+          script:
+            - chmod +x ./deploy.sh
+            - bash ./deploy.sh
+
+  `;
+};
+
+export const getDotEnvFileForBackendPhp = projectName => {
+  return `
+APP_URL=http://localhost:8099
+PORT=8099
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=${projectName}
+DB_USERNAME=root
+DB_PASSWORD=123456
+COMPOSE_PROJECT_NAME=${projectName}
+DOCKER_MYSQL_PORT=3377
+DOCKER_PHPMYADMIN_PORT=3378
   `;
 };

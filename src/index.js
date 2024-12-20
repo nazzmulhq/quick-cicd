@@ -9,14 +9,19 @@ import path from 'path';
 import {
   getBitbucketPipelinesFile,
   getBitbucketPipelinesFileForBackendNode,
+  getBitbucketPipelinesFileForBackendPhp,
   getDeployShFile,
   getDeployShFileForBackendNode,
+  getDeployShFileForBackendPhp,
   getDockerComposeFile,
   getDockerComposeFileForBackendNode,
+  getDockerComposeFileForBackendPhp,
   getDockerFile,
   getDockerFileForBackendNode,
+  getDockerFileForBackendPhp,
   getDotEnvFile,
   getDotEnvFileForBackendNode,
+  getDotEnvFileForBackendPhp,
   getEcosystemConfigJsFile,
 } from './const.js';
 
@@ -79,7 +84,7 @@ const questions = [
       'ViteJS-(React)',
       'NextJS-(React)',
       'NodeJS-(ExpressJS or NestJS)',
-      'PHP-(Coming Soon)',
+      'PHP-(Laravel)',
       'Python-(Coming Soon)',
     ],
     default: 'frontend (react or next.js)',
@@ -251,7 +256,32 @@ async function main() {
         content: getDotEnvFileForBackendNode(projectName),
       },
     ],
-    'PHP-(Laravel)': [],
+    'PHP-(Laravel)': [
+      {
+        name: 'Dockerfile',
+        content: getDockerFileForBackendPhp(dependency),
+      },
+      {
+        name: 'docker-compose.yml',
+        content: getDockerComposeFileForBackendPhp(projectName),
+      },
+      {
+        name: 'deploy.sh',
+        content: getDeployShFileForBackendPhp(projectName),
+      },
+      {
+        name: 'bitbucket-pipelines.yml',
+        content: getBitbucketPipelinesFileForBackendPhp(
+          projectName,
+          dependency,
+          caches
+        ),
+      },
+      {
+        name: 'env.example',
+        content: getDotEnvFileForBackendPhp(projectName),
+      },
+    ],
     PythonDjango: [],
   };
 
